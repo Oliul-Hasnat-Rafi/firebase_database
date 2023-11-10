@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'package:firebase_flutter/login.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -39,6 +41,15 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Firebase Database'),
+        actions: [
+          GestureDetector(
+              onTap: () async {
+                await FirebaseAuth.instance.signOut().then((value) =>
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => MyLogin())));
+              },
+              child: Icon(Icons.logout_rounded))
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
