@@ -1,8 +1,11 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firebase_flutter/login.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -17,6 +20,8 @@ class _HomeState extends State<Home> {
   final updatepostController = TextEditingController();
   final updatetopicController = TextEditingController();
   final databaseref = FirebaseDatabase.instance.ref('Posts');
+  File? _path;
+  final picker = ImagePicker();
 
   String id = DateTime.now().millisecondsSinceEpoch.toString();
   bool validateInput() {
@@ -25,7 +30,18 @@ class _HomeState extends State<Home> {
     }
     return true;
   }
-
+Future getImageGallery() async{
+final imagepath = await picker.pickImage(source: ImageSource.gallery);
+setState(() {
+  if (imagepath!=null) {
+        _path = File(imagepath.path);
+    }
+    else{
+       print('no image picked');
+    }  
+});
+                    
+}
   void pushtofirebase() {
     databaseref.child(id).set({
       'topic': topicController.text.toString(),
@@ -116,14 +132,32 @@ class _HomeState extends State<Home> {
 
   void _bottomsheet(BuildContext context) {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       builder: (context) {
         return Container(
           child: Column(
             children: [
               SizedBox(
-                height: 30,
+                height: 50,
               ),
+              InkWell(
+                onTap: (){
+                  getImageGallery();
+                },
+                child: Container(
+                  height: 150,
+                  width: 150,
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                          color: Colors.black
+                      )
+                  ),
+                  child: _path != null ? Image.file(_path!.absolute) :
+                  Center(child: Icon(Icons.image)),
+                ),
+              ),
+            
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(

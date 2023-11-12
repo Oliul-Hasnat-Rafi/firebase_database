@@ -15,10 +15,11 @@ class MyLogin extends StatefulWidget {
 class _MyLoginState extends State<MyLogin> {
   final auth = FirebaseAuth.instance;
 
-  void login() {
+  Future login()async {
     final auth = FirebaseAuth.instance;
 
-    final user = auth.currentUser;
+    // ignore: await_only_futures
+    final user = await auth.currentUser;
 
     if (user != null) {
       Timer(
@@ -38,7 +39,7 @@ class _MyLoginState extends State<MyLogin> {
 
  @override
  void initState() {
-  // login();
+   login();
    super.initState();
    
  }
@@ -127,8 +128,6 @@ class _MyLoginState extends State<MyLogin> {
                                                 .text
                                                 .toString())
                                         .then((value) {
-                                      Utils().toastMessage(
-                                          value.toString());
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(
