@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:firebase_flutter/login.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -19,37 +19,28 @@ class _HomeState extends State<Home> {
   final topicController = TextEditingController();
   final updatepostController = TextEditingController();
   final updatetopicController = TextEditingController();
+  final storage = FirebaseStorage.instance;
   final databaseref = FirebaseDatabase.instance.ref('Posts');
   File? _path;
   final picker = ImagePicker();
-
   String id = DateTime.now().millisecondsSinceEpoch.toString();
+
   bool validateInput() {
     if (postController.text.isEmpty || topicController.text.isEmpty) {
       return false;
     }
     return true;
   }
-Future getImageGallery() async{
-final imagepath = await picker.pickImage(source: ImageSource.gallery);
-setState(() {
-  if (imagepath!=null) {
+
+  Future getImageGallery() async {
+    final imagepath = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (imagepath != null) {
         _path = File(imagepath.path);
-    }
-    else{
-       print('no image picked');
-    }  
-});
-                    
-}
-  void pushtofirebase() {
-    databaseref.child(id).set({
-      'topic': topicController.text.toString(),
-      'title': postController.text.toString(),
-    }).then((value) => (value) {});
-    topicController.clear;
-    postController.clear;
-    Navigator.pop(context);
+      } else {
+        print('no image picked');
+      }
+    });
   }
 
   @override
@@ -142,22 +133,19 @@ setState(() {
                 height: 50,
               ),
               InkWell(
-                onTap: (){
+                onTap: () {
                   getImageGallery();
                 },
                 child: Container(
                   height: 150,
                   width: 150,
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                          color: Colors.black
-                      )
-                  ),
-                  child: _path != null ? Image.file(_path!.absolute) :
-                  Center(child: Icon(Icons.image)),
+                  decoration:
+                      BoxDecoration(border: Border.all(color: Colors.black)),
+                  child: _path != null
+                      ? Image.file(_path!.absolute)
+                      : Center(child: Icon(Icons.image)),
                 ),
               ),
-            
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
@@ -191,6 +179,27 @@ setState(() {
         );
       },
     );
+  }
+
+  void pushtofirebase() async {
+    Reference reference = storage
+        .ref('/rafi/' + DateTime.now().microsecondsSinceEpoch.toString());
+
+    final TaskSnapshot snapshot = await reference.putFile(_path!.absolute);
+
+    Future.value(snapshot).then((value) async {
+      var downloadUrl = await snapshot.ref.getDownloadURL();
+      print("image: " + downloadUrl);
+      databaseref.child(id).set({
+        'topic': topicController.text.toString(),
+        'title': postController.text.toString(),
+        'url': downloadUrl.toString(),
+      });
+    });
+
+    topicController.clear;
+    postController.clear;
+    Navigator.pop(context);
   }
 
   void updatedata(
